@@ -226,6 +226,18 @@ class ImgHandler(tornado.web.RequestHandler):
         bgset = None
         color = None
 
+        # Ensure we have something to hash!
+        if string is None:
+            string = self.request.remote_ip
+
+        # Used for caching
+        etag = 'W/"{}"'.format(hashlib.sha512(string).hexdigest())
+
+        prev_etag = self.request.headers.get('If-None-Match')
+        if prev_etag and prev_etag == etag:
+            self.set_status(304)  # Not modified
+            return
+
         # Normally, we pass in arguments with standard HTTP GET
         # variables, such as ?set=any and &size=100x100
         #
@@ -258,11 +270,6 @@ class ImgHandler(tornado.web.RequestHandler):
                     if b[0] in ['gravatar','ignoreext','size','set','bgset','color']:
                         args[b[0]] = b[1]
                         string = re.sub("/" + st,'',string)
-
-        # Ensure we have something to hash!
-        if string is None:
-                string = self.request.remote_ip
-
 
         # Detect if the user has passed in a flag to ignore extensions.
         # Pass this along to to Robohash obj later on.
@@ -344,6 +351,8 @@ class ImgHandler(tornado.web.RequestHandler):
             bgset = args.get('bgset')
 
         # We're going to be returning the image directly, so tell the browser to expect a binary.
+        self.set_header("ETag", etag)
+
         self.set_header("Content-Type", "image/" + format)
         self.set_header("Cache-Control", "public,max-age=31536000")
 
