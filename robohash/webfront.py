@@ -39,7 +39,7 @@ define("port", default=80, help="run on the given port", type=int)
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         ip = self.request.remote_ip
-            
+
         robo = [
 """
                      ,     ,
@@ -133,7 +133,7 @@ class MainHandler(tornado.web.RequestHandler):
                                                                      /   \\   /   \\
                                                                     |_____| |_____|
                                                                     |HHHHH| |HHHHH|
-                                                        """, 
+                                                        """,
 """                                        ()               ()
                                                                                     \\             /
                                                                                  __\\___________/__
@@ -163,7 +163,7 @@ class MainHandler(tornado.web.RequestHandler):
                                                                                 / __ \\      / __ \\
                                                                                 OO  OO      OO  OO
                                                         """]
-                                                        
+
 
         quotes = ["But.. I love you!",
         "Please don't leave the site.. When no one's here.. It gets dark...",
@@ -210,13 +210,14 @@ class MainHandler(tornado.web.RequestHandler):
         random.shuffle(drquotes)
         self.write(self.render_string('templates/root.html',ip=ip,robo=random.choice(robo),drquote1=drquotes[1],drquote2=drquotes[2],quotes=quotes))
 
+
 class ImgHandler(tornado.web.RequestHandler):
     """
     The ImageHandler is our tornado class for creating a robot.
     called as Robohash.org/$1, where $1 becomes the seed string for the Robohash obj
     """
-    def get(self,string=None):
-        
+
+    def get(self, string=None):
 
         # Set default values
         sizex = 300
@@ -225,13 +226,16 @@ class ImgHandler(tornado.web.RequestHandler):
         bgset = None
         color = None
 
-        # Normally, we pass in arguments with standard HTTP GET variables, such as
-        # ?set=any and &size=100x100
-        # 
-        # Some sites don't like this though.. They cache it weirdly, or they just don't allow GET queries.
-        # Rather than trying to fix the intercows, we can support this with directories... <grumble>
-        # We'll translate /abc.png/s_100x100/set_any to be /abc.png?set=any&s=100x100
-        # We're using underscore as a replacement for = and / as a replacement for [&?]
+        # Normally, we pass in arguments with standard HTTP GET
+        # variables, such as ?set=any and &size=100x100
+        #
+        # Some sites don't like this though.. They cache it weirdly,
+        # or they just don't allow GET queries.  Rather than trying to
+        # fix the intercows, we can support this with
+        # directories... <grumble> We'll translate
+        # /abc.png/s_100x100/set_any to be /abc.png?set=any&s=100x100
+        # We're using underscore as a replacement for = and / as a
+        # replacement for [&?]
 
         args = self.request.arguments.copy()
 
@@ -243,7 +247,7 @@ class ImgHandler(tornado.web.RequestHandler):
                 else:
                     args[k] = ""
 
-        # Detect if they're using the above slash-separated parameters.. 
+        # Detect if they're using the above slash-separated parameters..
         # If they are, then remove those parameters from the query string.
         # If not, don't remove anything.
         split = string.split('/')
@@ -274,8 +278,8 @@ class ImgHandler(tornado.web.RequestHandler):
                     sizex = 300
                 if sizey > 4096 or sizey < 0:
                     sizey = 300
-                                    
-        # Allow Gravatar lookups - 
+
+        # Allow Gravatar lookups -
         # This allows people to pass in a gravatar-style hash, and return their gravatar image, instead of a Robohash.
         # This is often used for example, to show a Gravatar if it's set for an email, or a Robohash if not.
         if args.get('gravatar','').lower() == 'yes':
@@ -288,19 +292,18 @@ class ImgHandler(tornado.web.RequestHandler):
             default = "404"
             gravatar_url = "https://secure.gravatar.com/avatar/" + string + "?"
             gravatar_url += urlencode({'default':default, 'size':str(sizey)})
-        
+
         # If we do want a gravatar, request one. If we can't get it, just keep going, and return a robohash
         if args.get('gravatar','').lower() in ['hashed','yes']:
             try:
                 f = urlopen(gravatar_url)
-                self.redirect(gravatar_url, permanent=False)  
+                self.redirect(gravatar_url, permanent=False)
                 return
             except:
                 args['avatar'] = False
-                    
+
         # Create our Robohashing object
         r = Robohash(string)
-
 
         # Allow users to manually specify a robot 'set' that they like.
         # Ensure that this is one of the allowed choices, or allow all
@@ -323,9 +326,8 @@ class ImgHandler(tornado.web.RequestHandler):
         if possiblesets:
             roboset = possiblesets[r.hasharray[1] % len(possiblesets) ]
 
-
         # Only set1 is setup to be color-seletable. The others don't have enough pieces in various colors.
-        # This could/should probably be expanded at some point.. 
+        # This could/should probably be expanded at some point..
         # Right now, this feature is almost never used. ( It was < 44 requests this year, out of 78M reqs )
 
         if args.get('color') in r.colors:
@@ -340,7 +342,7 @@ class ImgHandler(tornado.web.RequestHandler):
         # Allow them to set a background, or keep as None
         if args.get('bgset') in r.bgsets + ['any']:
             bgset = args.get('bgset')
-                                                                                         
+
         # We're going to be returning the image directly, so tell the browser to expect a binary.
         self.set_header("Content-Type", "image/" + format)
         self.set_header("Cache-Control", "public,max-age=31536000")
