@@ -362,32 +362,37 @@ class ImgHandler(tornado.web.RequestHandler):
             b64ver = b64ver.decode('utf-8')
             self.write("data:image/png;base64," + str(b64ver))
 
-def main():
-        tornado.options.parse_command_line()
-        # timeout in seconds
-        timeout = 10
-        socket.setdefaulttimeout(timeout)
 
-        settings = {
+def main():
+    tornado.options.parse_command_line()
+    # timeout in seconds
+    timeout = 10
+    socket.setdefaulttimeout(timeout)
+    settings = {
         "static_path": os.path.join(os.path.dirname(__file__), "static"),
         "cookie_secret": "9b90a85cfe46cad5ec136ee44a3fa332",
         "login_url": "/login",
         "xsrf_cookies": True,
-        }
+    }
 
-        application = tornado.web.Application([
-                (r'/(crossdomain\.xml)', tornado.web.StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__),
-                "static/")}),
-                (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__),
-                "static/")}),
-                (r"/", MainHandler),
-                (r"/(.*)", ImgHandler),
-        ], **settings)
+    application = tornado.web.Application([
+        (r'/(crossdomain\.xml)',
+         tornado.web.StaticFileHandler,
+         {"path": os.path.join(os.path.dirname(__file__), "static/")}),
+        (r"/static/(.*)",
+         tornado.web.StaticFileHandler,
+         {"path": os.path.join(os.path.dirname(__file__), "static/")}),
+        (r"/", MainHandler),
+        (r"/(.*)", ImgHandler),
+    ], **settings)
 
-        http_server = tornado.httpserver.HTTPServer(application,xheaders=True)
-        http_server.listen(options.port)
+    http_server = tornado.httpserver.HTTPServer(application, xheaders=True)
+    http_server.listen(options.port)
 
-        print("The Oven is warmed up - Time to make some Robots! Listening on port: " + str(options.port))
-        tornado.ioloop.IOLoop.instance().start()
+    print("The Oven is warmed up - Time to make some Robots!")
+    print("Listening on port: {}".format(options.port))
+    tornado.ioloop.IOLoop.instance().start()
+
+
 if __name__ == "__main__":
         main()
